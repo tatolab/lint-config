@@ -34,7 +34,7 @@ and `main` takes a change only through a pull request the code owner approves.
   not split yet are listed as `<lines> <path>` in the repository's exception
   list. A listed file may not grow, an entry whose file is back under the limit
   must go, and `--compare-to origin/main` fails on a new entry or a raised
-  count. Generated files (an `@generated` or `DO NOT EDIT` marker in the first
+  count. Generated files (an `@generated` or `do not edit` marker, in any case, in the first
   five lines), `vendor/` and `node_modules/` are not checked; `--exclude` adds
   more.
 - `rust/check_module_files.py`: a Rust module with children is `foo/mod.rs`,

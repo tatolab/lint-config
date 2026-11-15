@@ -17,7 +17,7 @@ from tracked_files import glob_pattern, matches_any, tracked_files  # noqa: E402
 
 DEFAULT_INCLUDE = ["**/*.rs", "**/*.py", "**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.mjs", "**/*.cjs", "**/*.astro", "**/*.swift", "**/*.m", "**/*.mm", "**/*.c", "**/*.h", "**/*.cpp", "**/*.sh"]
 DEFAULT_EXCLUDE = ["**/vendor/**", "**/node_modules/**"]
-GENERATED_MARKERS = ("@generated", "DO NOT EDIT")
+GENERATED_MARKERS = ("@generated", "do not edit")
 
 
 def line_count(path: str) -> int:
@@ -27,10 +27,10 @@ def line_count(path: str) -> int:
 
 
 def is_generated(path: str) -> bool:
-    """Whether the file says in its first lines that a tool wrote it."""
+    """Whether the file says in its first lines, in any case, that a tool wrote it."""
     with open(path, encoding="utf-8", errors="replace") as file:
         head = "".join(file.readline() for _ in range(5))
-    return any(marker in head for marker in GENERATED_MARKERS)
+    return any(marker in head.lower() for marker in GENERATED_MARKERS)
 
 
 def main() -> int:
