@@ -94,6 +94,61 @@ class ModuleFileTests(RepositoryTestCase):
         self.assertIn("src/graph/mod.rs", run("rust/check_module_files.py", self.repository).stderr)
 
 
+    def test_a_listed_misplaced_module_passes_until_it_moves(self) -> None:
+        self.write("src/graph.rs", "mod nodes;\n")
+        self.write("src/graph/nodes.rs", "")
+        self.write("module-file-exceptions.txt", "1 src/graph.rs\n")
+        self.assertEqual(run("rust/check_module_files.py", self.repository, "--exceptions", "module-file-exceptions.txt").returncode, 0)
+        self.git("mv", "src/graph.rs", "src/graph/mod.rs")
+        self.assertIn("not misplaced any more", run("rust/check_module_files.py", self.repository, "--exceptions", "module-file-exceptions.txt").stderr)
+
+
+class AstGrepScanTests(RepositoryTestCase):
+    INLINE_TESTS = "fn a() {}\n#[cfg(test)]\nmod tests {\n    fn t() {}\n}\n"
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.write("sgconfig.yml", f"ruleDirs: [{LINT_CONFIG / 'ast-grep/rust/rules'}]\n")
+
+    def check(self, *arguments: str) -> subprocess.CompletedProcess[str]:
+        return run("ast-grep/check_ast_grep_scan.py", self.repository, "--exceptions", "ast-grep-exceptions.txt", *arguments)
+
+    def test_a_clean_tree_passes(self) -> None:
+        self.write("src/lib.rs", "fn a() {}\n")
+        self.assertEqual(self.check().returncode, 0, self.check().stderr)
+
+    def test_a_finding_fails_unless_listed(self) -> None:
+        self.write("src/lib.rs", self.INLINE_TESTS)
+        self.assertIn("src/lib.rs:3:", self.check().stderr)
+        self.write("ast-grep-exceptions.txt", "1 no-inline-test-module src/lib.rs\n")
+        self.assertEqual(self.check().returncode, 0, self.check().stderr)
+
+    def test_a_listed_file_may_not_gain_findings(self) -> None:
+        self.write("src/lib.rs", self.INLINE_TESTS + "#[cfg(test)]\nmod more_tests {\n    fn t() {}\n}\n")
+        self.write("ast-grep-exceptions.txt", "1 no-inline-test-module src/lib.rs\n")
+        self.assertIn("2 findings, more than its exception of 1", self.check().stderr)
+
+    def test_an_entry_with_no_findings_left_must_go(self) -> None:
+        self.write("src/lib.rs", "fn a() {}\n")
+        self.write("ast-grep-exceptions.txt", "1 no-inline-test-module src/lib.rs\n")
+        self.assertIn("has no findings left; remove the entry", self.check().stderr)
+
+    def test_the_list_only_shrinks_against_the_ref(self) -> None:
+        self.write("src/lib.rs", self.INLINE_TESTS)
+        self.write("src/other.rs", self.INLINE_TESTS)
+        self.write("ast-grep-exceptions.txt", "1 no-inline-test-module src/lib.rs\n")
+        self.git("commit", "-q", "-m", "base")
+        self.write("ast-grep-exceptions.txt", "1 no-inline-test-module src/lib.rs\n1 no-inline-test-module src/other.rs\n")
+        self.assertIn("src/other.rs is a new exception", self.check("--compare-to", "main").stderr)
+
+    def test_tighten_drops_fixed_entries(self) -> None:
+        self.write("src/lib.rs", self.INLINE_TESTS)
+        self.write("src/fixed.rs", "fn a() {}\n")
+        self.write("ast-grep-exceptions.txt", "3 no-inline-test-module src/lib.rs\n1 no-inline-test-module src/fixed.rs\n")
+        self.assertEqual(self.check("--tighten").returncode, 0, self.check().stderr)
+        self.assertEqual((self.repository / "ast-grep-exceptions.txt").read_text(), "1 no-inline-test-module src/lib.rs\n")
+
+
 class LintTableTests(RepositoryTestCase):
     CLIPPY = textwrap.dedent("""\
         disallowed-macros = [
