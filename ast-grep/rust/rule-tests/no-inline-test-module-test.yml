@@ -1,0 +1,27 @@
+id: no-inline-test-module
+valid:
+  - |
+    #[cfg(test)]
+    mod tests;
+  - |
+    mod inner {
+        pub fn shown() {}
+    }
+  - |
+    #[cfg(feature = "loom")]
+    mod model {
+        fn run() {}
+    }
+invalid:
+  - |
+    #[cfg(test)]
+    mod tests {
+        #[test]
+        fn adds() {}
+    }
+  - |
+    #[cfg(test)]
+    #[allow(clippy::unwrap_used, reason = "tests")]
+    mod checks {
+        fn run() {}
+    }

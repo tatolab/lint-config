@@ -1,0 +1,21 @@
+id: no-inline-test-module
+language: rust
+severity: error
+message: A test module lives in its own file, declared as `#[cfg(test)] mod tests;`, not inline in library source.
+note: Move the module's body to a sibling file (`tests.rs`, or `<module>/tests.rs` beside a `mod.rs`).
+rule:
+  kind: mod_item
+  has:
+    field: body
+    kind: declaration_list
+  follows:
+    kind: attribute_item
+    regex: '^#\[cfg\(\s*test\s*\)\]$'
+    stopBy:
+      not:
+        kind: attribute_item
+ignores:
+  - "**/tests/**"
+  - "**/benches/**"
+  - "**/examples/**"
+  - "**/vendor/**"

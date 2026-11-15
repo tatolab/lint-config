@@ -1,0 +1,4 @@
+ruleDirs:
+  - ast-grep/rust/rules
+testConfigs:
+  - testDir: ast-grep/rust/rule-tests

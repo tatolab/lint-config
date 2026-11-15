@@ -1,0 +1,14 @@
+id: no-path-attribute
+language: rust
+severity: error
+message: A module is found where its name puts it; library source never moves one with `#[path]`.
+note: Move the file to the path its `mod` declaration names, `foo/mod.rs` for a module with children.
+rule:
+  kind: attribute_item
+  regex: '^#!?\[\s*(path\s*=|cfg_attr\(.*\bpath\s*=)'
+ignores:
+  - "**/tests/**"
+  - "**/benches/**"
+  - "**/examples/**"
+  - "**/build.rs"
+  - "**/vendor/**"

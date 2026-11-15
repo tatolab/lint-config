@@ -1,0 +1,11 @@
+id: no-path-attribute
+valid:
+  - mod graph;
+  - '#[cfg(test)] mod tests;'
+invalid:
+  - |
+    #[path = "graph_impl.rs"]
+    mod graph;
+  - |
+    #[cfg_attr(unix, path = "unix.rs")]
+    mod platform;

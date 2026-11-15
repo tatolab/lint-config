@@ -1,0 +1,12 @@
+id: no-glob-re-export-outside-a-prelude
+valid:
+  - pub use crate::graph::{Graph, GraphNode};
+  - use crate::graph::*;
+  - pub(crate) use super::nodes::*;
+  - |
+    pub mod prelude {
+        pub use crate::graph::*;
+    }
+invalid:
+  - pub use crate::graph::*;
+  - pub use crate::{graph::*, nodes::Node};

@@ -1,0 +1,6 @@
+# The lints every Tatolab Rust workspace denies at least as strictly. Cargo can't inherit lints across
+# repositories, so each workspace writes its own `[workspace.lints]` and `check_lint_table.py` holds it
+# to this table. A workspace may add lints and make these stricter; it may not drop or loosen one.
+
+[workspace.lints.clippy]
+disallowed_macros = "deny"

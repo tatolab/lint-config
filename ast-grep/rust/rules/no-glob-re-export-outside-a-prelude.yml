@@ -1,0 +1,25 @@
+id: no-glob-re-export-outside-a-prelude
+language: rust
+severity: error
+message: A public re-export names what it re-exports; a glob `pub use …::*;` belongs only in a module named `prelude`.
+note: List the items the module means to make public.
+rule:
+  kind: use_declaration
+  all:
+    - has:
+        kind: visibility_modifier
+        regex: '^pub$'
+    - has:
+        stopBy: end
+        kind: use_wildcard
+    - not:
+        inside:
+          stopBy: end
+          kind: mod_item
+          has:
+            field: name
+            regex: '^prelude$'
+ignores:
+  - "**/prelude.rs"
+  - "**/prelude/**"
+  - "**/vendor/**"

@@ -7,16 +7,48 @@ agent or a person checks as they work. CI runs the same command to verify.
 A rule changes here, by pull request, and reaches a repository when that
 repository moves its pin.
 
-## Layout
+## What it holds
 
-- `ast-grep/rust/` — ast-grep rules for Rust, each with its `valid` and
-  `invalid` cases under `rule-tests/`. A consumer's `sgconfig.yml` lists
-  `ruleDirs` and `testConfigs` pointing here.
-- `eslint/` — the shared ESLint flat config.
-- `file-size/` — the file-size lint: no hand-written file over 1,000 lines,
-  with a per-repository exception list that may only shrink.
-- `rust/` — the reference `[workspace.lints]` table and `clippy.toml`, and the
-  check a consumer runs to prove its own table matches.
+- `ast-grep/rust/rules/`: ast-grep rules for Rust library source, each with
+  `valid` and `invalid` cases in `ast-grep/rust/rule-tests/`:
+  - `no-inline-test-module`: a `#[cfg(test)]` module lives in its own file.
+  - `no-glob-re-export-outside-a-prelude`: `pub use …::*;` only in a `prelude`.
+  - `no-path-attribute`: no `#[path]` in library source.
+
+  A consumer's `sgconfig.yml` lists `ruleDirs: [<pin>/ast-grep/rust/rules]`.
+- `eslint/index.js`: `tatolabTypeScriptLintConfig({ files, testFiles })`, the
+  shared ESLint flat config. A consumer installs this repository as a git
+  dependency pinned by SHA and spreads it first in its own config:
+
+  ```js
+  import { tatolabTypeScriptLintConfig } from "@tatolab/lint-config/eslint";
+  export default [...tatolabTypeScriptLintConfig({ files: ["src/**/*.{ts,tsx}"], testFiles: ["src/**/*.test.{ts,tsx}"] }), /* the repository's own rules */];
+  ```
+- `file-size/check_file_sizes.py`: no hand-written file over 1,000 lines. Files
+  not split yet are listed as `<lines> <path>` in the repository's exception
+  list. A listed file may not grow, an entry whose file is back under the limit
+  must go, and `--compare-to origin/main` fails on a new entry or a raised
+  count. Generated files (an `@generated` or `DO NOT EDIT` marker in the first
+  five lines), `vendor/` and `node_modules/` are not checked; `--exclude` adds
+  more.
+- `rust/check_module_files.py`: a Rust module with children is `foo/mod.rs`,
+  never `foo.rs` beside `foo/`.
+- `rust/workspace-lints.toml`, `rust/clippy.toml` and `rust/check_lint_table.py`:
+  the lints every Rust workspace sets at least as strictly. Cargo can't inherit
+  lints across repositories, so the check holds a workspace's own
+  `[workspace.lints]` and `clippy.toml` to the reference.
+
+The scripts need Python 3 (3.11 or newer for the lint-table check) and run from
+the consumer's repository root.
+
+## Testing
+
+```bash
+npm ci --ignore-scripts
+npm test   # the ESLint config's tests, the scripts' tests and `ast-grep test`
+```
+
+`ast-grep` must be on the path; CI installs `ast-grep-cli` 0.51.2.
 
 ## Licence
 
