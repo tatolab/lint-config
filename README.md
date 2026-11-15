@@ -5,7 +5,8 @@ commit and runs its rules locally, in the repository's own lint command, so an
 agent or a person checks as they work. CI runs the same command to verify.
 
 A rule changes here, by pull request, and reaches a repository when that
-repository moves its pin.
+repository moves its pin. Every file has a code owner (`.github/CODEOWNERS`),
+and `main` takes a change only through a pull request the code owner approves.
 
 ## What it holds
 
