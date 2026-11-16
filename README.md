@@ -31,6 +31,19 @@ and `main` takes a change only through a pull request the code owner approves.
   import { tatolabTypeScriptLintConfig } from "@tatolab/lint-config/eslint";
   export default [...tatolabTypeScriptLintConfig({ files: ["src/**/*.{ts,tsx}"], testFiles: ["src/**/*.test.{ts,tsx}"] }), /* the repository's own rules */];
   ```
+
+  It refuses a focused or skipped test, an unused disable directive, and an
+  ESLint or oxlint directive with no `-- description`.
+- `oxlint/oxlintrc.json`: the shared oxlint config, holding the rules oxlint
+  runs so ESLint does not run them too: no `any`, no type assertion but
+  `as const`, no non-null `!`, no `@ts-` comment, and no console or debugger
+  outside a `*.test.*` or `*.spec.*` file. Oxlint resolves `extends` by path,
+  so a consumer installs `oxlint` and extends the pinned copy from its own
+  `.oxlintrc.json`:
+
+  ```json
+  { "extends": ["./node_modules/@tatolab/lint-config/oxlint/oxlintrc.json"] }
+  ```
 - `file-size/check_file_sizes.py`: no hand-written file over 1,000 lines. Files
   not split yet are listed as `<lines> <path>` in the repository's exception
   list. A listed file may not grow, an entry whose file is back under the limit
@@ -53,7 +66,7 @@ the consumer's repository root.
 
 ```bash
 npm ci --ignore-scripts
-npm test   # the ESLint config's tests, the scripts' tests and `ast-grep test`
+npm test   # the ESLint and oxlint configs' tests, the scripts' tests and `ast-grep test`
 ```
 
 `ast-grep` must be on the path; CI installs `ast-grep-cli` 0.51.2.

@@ -8,16 +8,18 @@
   "exports": {
     "./eslint": "./eslint/index.js"
   },
-  "files": ["eslint/index.js", "file-size/check_file_sizes.py", "lib/tracked_files.py", "lib/exception_list.py", "rust", "ast-grep", "sgconfig.yml"],
+  "files": ["eslint/index.js", "oxlint/oxlintrc.json", "file-size/check_file_sizes.py", "lib/tracked_files.py", "lib/exception_list.py", "rust", "ast-grep", "sgconfig.yml"],
   "scripts": {
-    "test": "node --test eslint/*.test.js && python3 -m unittest discover -s tests && ast-grep test --skip-snapshot-tests"
+    "test": "node --test eslint/*.test.js oxlint/*.test.js && python3 -m unittest discover -s tests && ast-grep test --skip-snapshot-tests"
   },
   "peerDependencies": {
     "eslint": ">=9.0.0",
+    "oxlint": ">=1.91.0",
     "typescript-eslint": ">=8.0.0"
   },
   "devDependencies": {
     "eslint": "10.13.0",
+    "oxlint": "1.91.0",
     "typescript": "5.9.3",
     "typescript-eslint": "8.72.0"
   }
