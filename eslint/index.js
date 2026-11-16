@@ -24,7 +24,7 @@ const noFocusedOrSkippedTestRule = {
 export const tatolabLintPlugin = { meta: { name: "@tatolab/lint-config" }, rules: { "no-focused-or-skipped-test": noFocusedOrSkippedTestRule } };
 
 /**
- * The shared rules for `files`, and the test rule for `testFiles`: no `any`, no type assertion but `as const`, no non-null
+ * The shared rules for `files`, and the test rule for `testFiles` (which may be empty): no `any`, no type assertion but `as const`, no non-null
  * `!`, no `@ts-` comment, no console or debugger outside tests, and every disable directive used.
  */
 export function tatolabTypeScriptLintConfig({ files, testFiles }) {
@@ -43,9 +43,8 @@ export function tatolabTypeScriptLintConfig({ files, testFiles }) {
         "@typescript-eslint/ban-ts-comment": "error",
       },
     },
-    {
-      files: testFiles,
-      rules: { "no-console": "off", "no-debugger": "off", "tatolab/no-focused-or-skipped-test": "error" },
-    },
+    ...(testFiles.length > 0
+      ? [{ files: testFiles, rules: { "no-console": "off", "no-debugger": "off", "tatolab/no-focused-or-skipped-test": "error" } }]
+      : []),
   ];
 }

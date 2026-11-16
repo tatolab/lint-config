@@ -26,3 +26,9 @@ test("a test file may log but may not focus or skip a test", () => {
 test("a disable directive that disables nothing is reported", () => {
   assert.deepEqual(ruleIdsReported("// eslint-disable-next-line no-console\nexport const quiet = 1;\n", "src/quiet.ts"), [null]);
 });
+
+test("a repository with no test files passes an empty testFiles", () => {
+  const configWithNoTests = tatolabTypeScriptLintConfig({ files: ["**/*.ts"], testFiles: [] });
+  const reported = new Linter({ configType: "flat" }).verify("console.log(1);\n", configWithNoTests, "src/f.ts").map((message) => message.ruleId);
+  assert.deepEqual(reported, ["no-console"]);
+});
