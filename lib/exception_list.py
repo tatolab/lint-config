@@ -43,9 +43,41 @@ def exception_list_at(git_ref: str, path: str) -> dict[str, int]:
     return parse_exception_list(shown.stdout, f"{git_ref}:{path}") if shown.returncode == 0 else {}
 
 
+def paths_renamed_since(git_ref: str) -> dict[str, str]:
+    """Each tracked file git sees as renamed since `git_ref`, old path to new."""
+    shown = subprocess.run(
+        ["git", "diff", "--name-status", "-M", "-z", git_ref], capture_output=True, text=True
+    )
+    if shown.returncode != 0:
+        return {}
+    fields = shown.stdout.split("\0")
+    renamed = {}
+    index = 0
+    while index < len(fields) and fields[index]:
+        status = fields[index]
+        if status.startswith(("R", "C")):
+            if status.startswith("R"):
+                renamed[fields[index + 1]] = fields[index + 2]
+            index += 3
+        else:
+            index += 2
+    return renamed
+
+
+def key_after_renames(key: str, renamed: dict[str, str]) -> str:
+    """`key` with its path, its last word, moved to where the file went."""
+    *rule, file_path = key.split(" ")
+    return " ".join([*rule, renamed.get(file_path, file_path)])
+
+
 def growth_failures(allowed: dict[str, int], git_ref: str, path: str) -> list[str]:
-    """Each entry that is new since `git_ref`, or whose count rose."""
-    before = exception_list_at(git_ref, path)
+    """Each entry that is new since `git_ref`, or whose count rose. An entry of a file renamed since
+    `git_ref` is the same entry under the file's new path."""
+    renamed = paths_renamed_since(git_ref)
+    before = {}
+    for key, count in exception_list_at(git_ref, path).items():
+        moved = key_after_renames(key, renamed)
+        before[moved] = max(count, before.get(moved, 0))
     failures = []
     for key, count in sorted(allowed.items()):
         if key not in before:
