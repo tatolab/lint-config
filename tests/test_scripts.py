@@ -170,7 +170,7 @@ class LintTableTests(RepositoryTestCase):
         return run("rust/check_lint_table.py", self.repository)
 
     def test_a_table_as_strict_as_the_reference_passes(self) -> None:
-        self.write("Cargo.toml", '[workspace.lints.clippy]\ndisallowed_macros = "forbid"\nunwrap_used = "deny"\n')
+        self.write("Cargo.toml", '[workspace.lints.clippy]\ndisallowed_macros = "forbid"\nallow_attributes_without_reason = "deny"\nunwrap_used = "deny"\n')
         self.write("clippy.toml", self.CLIPPY)
         self.assertEqual(self.check().returncode, 0, self.check().stderr)
 
@@ -182,7 +182,7 @@ class LintTableTests(RepositoryTestCase):
         self.assertIn("disallowed_macros is missing", self.check().stderr)
 
     def test_a_dropped_disallowed_macro_fails(self) -> None:
-        self.write("Cargo.toml", '[workspace.lints.clippy]\ndisallowed_macros = "deny"\n')
+        self.write("Cargo.toml", '[workspace.lints.clippy]\ndisallowed_macros = "deny"\nallow_attributes_without_reason = "deny"\n')
         self.write("clippy.toml", self.CLIPPY.replace('    { path = "std::dbg", reason = "tracing" },\n', ""))
         self.assertIn("lacks std::dbg", self.check().stderr)
 
