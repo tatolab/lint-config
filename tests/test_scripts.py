@@ -142,6 +142,11 @@ class AstGrepScanTests(RepositoryTestCase):
         self.write("ast-grep-exceptions.txt", "1 no-inline-test-module src/lib.rs\n1 no-inline-test-module src/other.rs\n")
         self.assertIn("src/other.rs is a new exception", self.check("--compare-to", "main").stderr)
 
+    def test_a_hidden_directory_is_scanned_only_when_named(self) -> None:
+        self.write(".hidden/lib.rs", self.INLINE_TESTS)
+        self.assertEqual(self.check().returncode, 0, self.check().stderr)
+        self.assertIn(".hidden/lib.rs:3:", self.check("--path", ".", "--path", ".hidden").stderr)
+
     def test_tighten_drops_fixed_entries(self) -> None:
         self.write("src/lib.rs", self.INLINE_TESTS)
         self.write("src/fixed.rs", "fn a() {}\n")

@@ -21,7 +21,8 @@ and `main` takes a change only through a pull request the code owner approves.
   finding not in the repository's exception list of `<count> <rule-id> <path>`
   entries. The list works like the file-size check's: a listed file may not
   gain findings, an entry with none left must go, and `--compare-to` fails on a
-  new entry or a raised count.
+  new entry or a raised count. ast-grep skips hidden directories, so a rule for
+  `.github/` needs `--path . --path .github`.
 - `eslint/index.js`: `tatolabTypeScriptLintConfig({ files, testFiles })`, the
   shared ESLint flat config. A consumer installs this repository as a git
   dependency pinned by SHA and spreads it first in its own config:
