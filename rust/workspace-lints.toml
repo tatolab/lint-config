@@ -4,3 +4,4 @@
 
 [workspace.lints.clippy]
 disallowed_macros = "deny"
+allow_attributes_without_reason = "deny"
