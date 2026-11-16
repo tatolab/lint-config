@@ -8,7 +8,7 @@
   "exports": {
     "./eslint": "./eslint/index.js"
   },
-  "files": ["eslint/index.js", "file-size/check_file_sizes.py", "lib/tracked_files.py", "rust", "ast-grep", "sgconfig.yml"],
+  "files": ["eslint/index.js", "file-size/check_file_sizes.py", "lib/tracked_files.py", "lib/exception_list.py", "rust", "ast-grep", "sgconfig.yml"],
   "scripts": {
     "test": "node --test eslint/*.test.js && python3 -m unittest discover -s tests && ast-grep test --skip-snapshot-tests"
   },

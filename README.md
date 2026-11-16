@@ -17,6 +17,11 @@ and `main` takes a change only through a pull request the code owner approves.
   - `no-path-attribute`: no `#[path]` in library source.
 
   A consumer's `sgconfig.yml` lists `ruleDirs: [<pin>/ast-grep/rust/rules]`.
+- `ast-grep/check_ast_grep_scan.py`: runs `ast-grep scan` and fails on each
+  finding not in the repository's exception list of `<count> <rule-id> <path>`
+  entries. The list works like the file-size check's: a listed file may not
+  gain findings, an entry with none left must go, and `--compare-to` fails on a
+  new entry or a raised count.
 - `eslint/index.js`: `tatolabTypeScriptLintConfig({ files, testFiles })`, the
   shared ESLint flat config. A consumer installs this repository as a git
   dependency pinned by SHA and spreads it first in its own config:
@@ -29,11 +34,12 @@ and `main` takes a change only through a pull request the code owner approves.
   not split yet are listed as `<lines> <path>` in the repository's exception
   list. A listed file may not grow, an entry whose file is back under the limit
   must go, and `--compare-to origin/main` fails on a new entry or a raised
-  count. Generated files (an `@generated` or `DO NOT EDIT` marker in the first
+  count. Generated files (an `@generated` or `do not edit` marker, in any case, in the first
   five lines), `vendor/` and `node_modules/` are not checked; `--exclude` adds
   more.
 - `rust/check_module_files.py`: a Rust module with children is `foo/mod.rs`,
-  never `foo.rs` beside `foo/`.
+  never `foo.rs` beside `foo/`. `--exceptions` takes a list of `1 <path>`
+  entries for the files not moved yet, which may only shrink.
 - `rust/workspace-lints.toml`, `rust/clippy.toml` and `rust/check_lint_table.py`:
   the lints every Rust workspace sets at least as strictly. Cargo can't inherit
   lints across repositories, so the check holds a workspace's own
