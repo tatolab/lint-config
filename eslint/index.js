@@ -1,5 +1,7 @@
 // The ESLint rules every Tatolab TypeScript repository runs. A repository spreads
 // `tatolabTypeScriptLintConfig(...)` first in its own flat config and adds its own rules after.
+// The rules oxlint can run (no `any`, no type assertion, no non-null `!`, no `@ts-` comment, no console or
+// debugger outside tests) live in `oxlint/oxlintrc.json` instead, so no rule is reported by both linters.
 
 import tseslint from "typescript-eslint";
 
@@ -20,11 +22,11 @@ const noFocusedOrSkippedTestRule = {
   },
 };
 
-const DISABLE_OR_ENABLE_DIRECTIVE = /^(eslint-disable(-next-line|-line)?|eslint-enable)(\s|$)/;
+const DISABLE_OR_ENABLE_DIRECTIVE = /^((eslint|oxlint)-disable(-next-line|-line)?|(eslint|oxlint)-enable)(\s|$)/;
 const INLINE_CONFIGURATION_COMMENT = /^(eslint|eslint-env|global|globals|exported)\s/;
 
 /**
- * Refuses a disable or enable directive with no `-- description`, and any inline configuration comment
+ * Refuses an ESLint or oxlint disable or enable directive with no `-- description`, and any inline configuration comment
  * (`/* eslint rule: off *\/`, `/* global *\/`): a rule is switched off in `eslint.config.js`, or for one line with a reason.
  */
 const noUndescribedLintDirectiveRule = {
@@ -61,8 +63,8 @@ export const tatolabLintPlugin = {
 };
 
 /**
- * The shared rules for `files`, and the test rule for `testFiles` (which may be empty): no `any`, no type assertion but `as const`, no non-null
- * `!`, no `@ts-` comment, no console or debugger outside tests, and every disable directive used and described.
+ * The shared rules for `files`, and the test rule for `testFiles` (which may be empty): every ESLint disable directive used, every
+ * ESLint or oxlint directive described, and no focused or skipped test.
  */
 export function tatolabTypeScriptLintConfig({ files, testFiles }) {
   return [
@@ -71,18 +73,8 @@ export function tatolabTypeScriptLintConfig({ files, testFiles }) {
       languageOptions: { parser: tseslint.parser },
       plugins: { "@typescript-eslint": tseslint.plugin, tatolab: tatolabLintPlugin },
       linterOptions: { reportUnusedDisableDirectives: "error" },
-      rules: {
-        "no-console": "error",
-        "no-debugger": "error",
-        "@typescript-eslint/no-explicit-any": "error",
-        "@typescript-eslint/consistent-type-assertions": ["error", { assertionStyle: "never" }],
-        "@typescript-eslint/no-non-null-assertion": "error",
-        "@typescript-eslint/ban-ts-comment": "error",
-        "tatolab/no-undescribed-lint-directive": "error",
-      },
+      rules: { "tatolab/no-undescribed-lint-directive": "error" },
     },
-    ...(testFiles.length > 0
-      ? [{ files: testFiles, rules: { "no-console": "off", "no-debugger": "off", "tatolab/no-focused-or-skipped-test": "error" } }]
-      : []),
+    ...(testFiles.length > 0 ? [{ files: testFiles, rules: { "tatolab/no-focused-or-skipped-test": "error" } }] : []),
   ];
 }
