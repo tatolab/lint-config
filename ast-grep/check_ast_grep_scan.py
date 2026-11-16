@@ -4,7 +4,9 @@
 The exception list holds one `<count> <rule-id> <path>` entry per rule and file not fixed yet;
 `#` starts a comment. A listed file may not gain findings of that rule, an entry whose file has
 none left must go, and with `--compare-to <git-ref>` the list may only shrink: no new entry, no
-raised count. `--tighten` rewrites each count down to the findings now.
+raised count. `--tighten` rewrites each count down to the findings now. `--path` names what to
+scan (the repository by default); ast-grep skips hidden directories it walks into, so a rule for
+`.github/` needs `--path . --path .github`.
 """
 
 import argparse
@@ -18,9 +20,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 from exception_list import growth_failures, read_exception_list, write_exception_list  # noqa: E402
 
 
-def findings_by_rule_and_path(config: str) -> tuple[Counter[str], dict[str, list[str]]]:
+def findings_by_rule_and_path(config: str, paths: list[str]) -> tuple[Counter[str], dict[str, list[str]]]:
     """The error findings of `ast-grep scan`, counted by `<rule-id> <path>`, and each one's location."""
-    scan = subprocess.run(["ast-grep", "scan", "--config", config, "--json=compact"], capture_output=True, text=True)
+    scan = subprocess.run(["ast-grep", "scan", "--config", config, "--json=compact", *paths], capture_output=True, text=True)
     if scan.returncode not in (0, 1) or not scan.stdout.strip().startswith("["):
         raise SystemExit(f"ast-grep scan failed ({scan.returncode}):\n{scan.stderr}")
     counts: Counter[str] = Counter()
@@ -39,11 +41,12 @@ def main() -> int:
     parser.add_argument("--exceptions", required=True, help="the exception list, relative to the repository root")
     parser.add_argument("--config", default="sgconfig.yml", help="the ast-grep project configuration")
     parser.add_argument("--compare-to", help="a git ref whose exception list this one may only shrink from")
+    parser.add_argument("--path", action="append", help="a path to scan, repeatable; the repository by default")
     parser.add_argument("--tighten", action="store_true", help="rewrite each count down to the findings now")
     arguments = parser.parse_args()
 
     allowed = read_exception_list(arguments.exceptions)
-    counts, locations = findings_by_rule_and_path(arguments.config)
+    counts, locations = findings_by_rule_and_path(arguments.config, arguments.path or ["."])
 
     if arguments.tighten:
         allowed = {key: min(count, counts[key]) for key, count in allowed.items() if counts[key] > 0}
