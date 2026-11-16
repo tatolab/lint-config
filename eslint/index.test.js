@@ -24,7 +24,20 @@ test("a test file may log but may not focus or skip a test", () => {
 });
 
 test("a disable directive that disables nothing is reported", () => {
-  assert.deepEqual(ruleIdsReported("// eslint-disable-next-line no-console\nexport const quiet = 1;\n", "src/quiet.ts"), [null]);
+  assert.deepEqual(ruleIdsReported("// eslint-disable-next-line no-console -- the line logs\nexport const quiet = 1;\n", "src/quiet.ts"), [null]);
+});
+
+test("a described disable directive silences its line", () => {
+  assert.deepEqual(ruleIdsReported("// eslint-disable-next-line no-console -- the one line that reports to the terminal\nconsole.log(1);\n", "src/f.ts"), []);
+});
+
+test("a disable or enable directive without a description is refused", () => {
+  const code = "/* eslint-disable no-console */\nconsole.log(1);\n/* eslint-enable no-console */\n// eslint-disable-next-line no-debugger\ndebugger;\n";
+  assert.deepEqual(ruleIdsReported(code, "src/f.ts"), ["tatolab/no-undescribed-lint-directive", "tatolab/no-undescribed-lint-directive", "tatolab/no-undescribed-lint-directive"]);
+});
+
+test("an inline configuration comment is refused", () => {
+  assert.deepEqual(new Set(ruleIdsReported("/* eslint no-console: off */\n/* global window */\nexport const quiet = 1;\n", "src/f.ts")), new Set(["tatolab/no-undescribed-lint-directive"]));
 });
 
 test("a repository with no test files passes an empty testFiles", () => {
